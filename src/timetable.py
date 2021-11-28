@@ -15,7 +15,7 @@ def main(args: argparse.Namespace):
         disciplines = read_disciplines()
 
     valid_timetables = generate_valid_timetables(disciplines)
-    save_to_file('timetables.md', disciplines, valid_timetables)
+    save_to_file(args.file, disciplines, valid_timetables)
 
 
 def save_to_file(file_name: str, disciplines: list[Discipline], timetables: list[list[Offer]]) -> None:
@@ -23,7 +23,7 @@ def save_to_file(file_name: str, disciplines: list[Discipline], timetables: list
         for i, timetable in enumerate(timetables, 1):
             table = create_table(disciplines, timetable)
 
-            file.write(f'# Schedule {i:02}\n\n')
+            file.write(f'# Grade {i:02}\n\n')
             file.writelines(('|' + '|'.join(row) + '|\n' for row in table))
             file.write(generate_legend(disciplines, timetable))
 
@@ -84,6 +84,7 @@ def is_valid_timetable(timetable: list[Offer]) -> bool:
                 # Don't compare the same offer with it self
                 if offer_a == offer_b:
                     continue
+
                 schedule_a = offer_a.schedule
                 schedule_b = offer_b.schedule
                 # Check for time collision
@@ -132,6 +133,8 @@ def parsed_args() -> argparse.Namespace:
     )
     parser.add_argument('disciplines', type=str, nargs='+', default=[],
                         help='Discipline names or codes')
+    parser.add_argument('-f', '--file', type=str, default='timetables.md',
+                        help='Output MarkDown file path')
     return parser.parse_args()
 
 
