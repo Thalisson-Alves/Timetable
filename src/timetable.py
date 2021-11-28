@@ -1,5 +1,6 @@
 import argparse
 from itertools import product
+import unicodedata
 
 from utils.entities.discipline import Discipline
 from utils.entities.offer import Offer
@@ -22,8 +23,22 @@ def save_to_file(file_name: str, disciplines: list[Discipline], timetables: list
         for i, timetable in enumerate(timetables, 1):
             table = create_table(disciplines, timetable)
 
-            file.write(f'# Schedule {i:02}\n')
+            file.write(f'# Schedule {i:02}\n\n')
             file.writelines(('|' + '|'.join(row) + '|\n' for row in table))
+            file.write(generate_legend(disciplines, timetable))
+
+
+def generate_legend(disciplines: list[Discipline], timetable: list[Offer]) -> str:
+    legend = '\n<details>\n<summary>Legenda das ofertas</summary>\n\n'
+    for discipline, offer in zip(disciplines, timetable):
+        legend += f'- {discipline.short_name}: {discipline.name}\n'
+        legend += f'  - Turma: {offer.code}\n'
+        legend += f'  - Professor(a): {offer.teacher}\n'
+        legend += f'  - Local: {offer.place}\n'
+        legend += f'  - Vagas restantes: {offer.vacancies_offered - offer.vacancies_occuped}\n'
+
+    return ''.join(char for char in unicodedata.normalize('NFD', legend)
+                   if unicodedata.category(char) != 'Mn') + '</details>'
 
 
 def create_table(disciplines: list[Discipline], timetable: list[Offer]) -> list[list[str]]:
@@ -42,9 +57,11 @@ def create_table(disciplines: list[Discipline], timetable: list[Offer]) -> list[
                     body[i][(day - 1) % len(header)] = discipline.short_name
 
     for i in range(1, len(first_column)):
-        first_column[i][0] = max(first_column[i][0], first_column[i-1][1].rounded())
+        first_column[i][0] = max(
+            first_column[i][0], first_column[i-1][1].rounded())
 
-    first_column[:] = [f'**{arrival} to {departure}**' for arrival, departure in first_column]
+    first_column[:] = [
+        f'**{arrival} as {departure}**' for arrival, departure in first_column]
     return [[row_info, *row] for row_info, row
             in zip(['   ', ':---', *first_column],
                    [header, separator, *body])]
