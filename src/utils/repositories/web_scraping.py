@@ -13,8 +13,7 @@ def get_soup() -> BeautifulSoup:
     disciplines_url = 'https://sig.unb.br/sigaa/public/turmas/listar.jsf'
 
     with Session() as session:
-        response1 = session.get(disciplines_url)
-        response2 = session.post(disciplines_url, headers={'User-Agent': 'insomnia/2021.6.0'},
+        response = session.post(disciplines_url, headers={'User-Agent': 'insomnia/2021.6.0'},
                                  data={'formTurma': 'formTurma',
                                        'formTurma:inputNivel': 'G',
                                        'formTurma:inputDepto': '673',
@@ -22,9 +21,9 @@ def get_soup() -> BeautifulSoup:
                                        'formTurma:inputPeriodo': '2',
                                        'formTurma:j_id_jsp_1370969402_11': 'Buscar',
                                        'javax.faces.ViewState': 'j_id1'},
-                                 cookies=response1.cookies)
+                                 cookies=session.get(disciplines_url).cookies)
 
-    return BeautifulSoup(response2.content, 'html.parser')
+    return BeautifulSoup(response.content, 'html.parser')
 
 
 def load_disciplines() -> list[Discipline]:

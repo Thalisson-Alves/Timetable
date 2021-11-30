@@ -13,6 +13,10 @@ class DisciplineRepository:
                 return discipline
 
     @classmethod
+    def get_all(cls, length: int = None, offset: int = None) -> list[Discipline]:
+        return cls._disciplines[offset:length]
+
+    @classmethod
     def get_by_offer(cls, offer: Offer) -> list[Discipline]:
         return [discipline for discipline in cls._disciplines
                 if offer in discipline]

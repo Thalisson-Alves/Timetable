@@ -8,6 +8,9 @@ from utils.repositories.discipline_repository import DisciplineRepository
 
 
 def main(args: argparse.Namespace):
+    if args.list:
+        display_disciplines()
+
     if args.disciplines:
         disciplines = [discipline for name in args.disciplines
                        if (discipline := discipline_for_name(name))]
@@ -16,6 +19,14 @@ def main(args: argparse.Namespace):
 
     valid_timetables = generate_valid_timetables(disciplines)
     save_to_file(args.file, disciplines, valid_timetables)
+
+
+def display_disciplines():
+    print('All available disciplines:\n')
+    print('-' * 30)
+    for discipline in DisciplineRepository.get_all():
+        print(f'Code: {discipline.id_} \t Name: {discipline.name}')
+    print('-' * 30)
 
 
 def save_to_file(file_name: str, disciplines: list[Discipline], timetables: list[list[Offer]]) -> None:
@@ -62,8 +73,8 @@ def create_table(disciplines: list[Discipline], timetable: list[Offer]) -> list[
         first_column[i][0] = max(
             first_column[i][0], first_column[i-1][1].rounded())
 
-    first_column[:] = [
-        f'**{arrival} as {departure}**' for arrival, departure in first_column]
+    first_column[:] = [f'**{arrival} as {departure}**'
+                       for arrival, departure in first_column]
     return [[row_info, *row] for row_info, row
             in zip(['   ', ':---', *first_column],
                    [header, separator, *body])]
@@ -133,10 +144,13 @@ def parsed_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description='Finds all the possible timetables for given disciplines'
     )
-    parser.add_argument('disciplines', type=str, nargs='+', default=[],
+    parser.add_argument('-d', '--disciplines', type=str, nargs='+',
+                        default=[], required=False,
                         help='Discipline names or codes')
     parser.add_argument('-f', '--file', type=str, default='timetables.md',
                         help='Output MarkDown file path')
+    parser.add_argument('-l', '--list', action='store_true',
+                        help='Display all disciplines')
     return parser.parse_args()
 
 
