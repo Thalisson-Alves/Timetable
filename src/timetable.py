@@ -18,7 +18,7 @@ def main(args: argparse.Namespace):
         disciplines = read_disciplines()
 
     valid_timetables = generate_valid_timetables(disciplines)
-    save_to_file(args.file, disciplines, valid_timetables)
+    save_to_file(args.output_file, disciplines, valid_timetables)
 
 
 def display_disciplines():
@@ -38,7 +38,7 @@ def save_to_file(file_name: str, disciplines: list[Discipline], timetables: list
             file.writelines(('|' + '|'.join(row) + '|\n' for row in table))
             file.write(generate_legend(disciplines, timetable))
 
-    print(f'\nFile generated, checkout {file_name}')
+    print(f'\nSaved result on file: {file_name}')
 
 
 def generate_legend(disciplines: list[Discipline], timetable: list[Offer]) -> str:
@@ -51,7 +51,7 @@ def generate_legend(disciplines: list[Discipline], timetable: list[Offer]) -> st
         legend += f'  - Vagas restantes: {offer.vacancies_offered - offer.vacancies_occuped}\n'
 
     return ''.join(char for char in unicodedata.normalize('NFD', legend)
-                   if unicodedata.category(char) != 'Mn') + '</details>\n'
+                   if unicodedata.category(char) != 'Mn') + '</details>\n\n'
 
 
 def create_table(disciplines: list[Discipline], timetable: list[Offer]) -> list[list[str]]:
@@ -59,19 +59,21 @@ def create_table(disciplines: list[Discipline], timetable: list[Offer]) -> list[
               'Quinta', 'Sexta', 'Sabado', 'Domingo']
     separator = [':---:'] * len(header)
 
-    first_column = sorted([[offer.schedule.arrival, offer.schedule.departure]
-                           for offer in timetable])
+    first_column = sorted({(offer.schedule.arrival, offer.schedule.departure)
+                           for offer in timetable})
 
     body = [['   '] * len(header) for _ in range(len(first_column))]
     for discipline, offer in zip(disciplines, timetable):
         for day in offer.schedule.days:
             for i, (start, end) in enumerate(first_column):
                 if offer.schedule.departure > start and end > offer.schedule.arrival:
-                    body[i][(day - 1) % len(header)] = discipline.short_name
+                    current_cell = body[i][(day - 1) % len(header)].strip()
+                    cell_name = discipline.short_name if not current_cell else f'{current_cell}|{discipline.short_name}'
+                    body[i][(day - 1) % len(header)] = cell_name
 
-    for i in range(1, len(first_column)):
-        first_column[i][0] = max(
-            first_column[i][0], first_column[i-1][1].rounded())
+    for i, (arrival, departure) in enumerate(first_column[1:], 1):
+        first_column[i] = (max(arrival, first_column[i-1][1].rounded()),
+                           departure)
 
     first_column[:] = [f'**{arrival} as {departure}**'
                        for arrival, departure in first_column]
@@ -147,7 +149,7 @@ def parsed_args() -> argparse.Namespace:
     parser.add_argument('-d', '--disciplines', type=str, nargs='+',
                         default=[], required=False,
                         help='Discipline names or codes')
-    parser.add_argument('-f', '--file', type=str, default='timetables.md',
+    parser.add_argument('-o', '--output-file', type=str, default='timetables.md',
                         help='Output MarkDown file path')
     parser.add_argument('-l', '--list', action='store_true',
                         help='Display all disciplines')

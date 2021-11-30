@@ -29,6 +29,9 @@ class Time:
     def __str__(self) -> str:
         return f'{self.hour:02}:{self.minutes:02}'
 
+    def __hash__(self) -> int:
+        return hash((self.hour, self.minutes))
+
 
 @dataclass
 class Schedule:
