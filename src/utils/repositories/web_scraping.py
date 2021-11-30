@@ -1,6 +1,7 @@
 import re
 
 from bs4 import BeautifulSoup
+from requests import Session
 
 from utils.entities.discipline import Discipline
 from utils.entities.offer import Offer
@@ -8,12 +9,22 @@ from utils.entities.schedule import Schedule, Time
 
 
 def get_soup() -> BeautifulSoup:
-    import os
-    # For now I'm getting the html from a file, but planning to
-    # update this to use request instead
-    file_name = os.path.join(os.path.dirname(__file__), 'offers.html')
-    with open(file_name,  encoding='utf-8') as file:
-        return BeautifulSoup(file.read(), 'html.parser')
+    # Getting only offers from FGA for now
+    disciplines_url = 'https://sig.unb.br/sigaa/public/turmas/listar.jsf'
+
+    with Session() as session:
+        response1 = session.get(disciplines_url)
+        response2 = session.post(disciplines_url, headers={'User-Agent': 'insomnia/2021.6.0'},
+                                 data={'formTurma': 'formTurma',
+                                       'formTurma:inputNivel': 'G',
+                                       'formTurma:inputDepto': '673',
+                                       'formTurma:inputAno': '2021',
+                                       'formTurma:inputPeriodo': '2',
+                                       'formTurma:j_id_jsp_1370969402_11': 'Buscar',
+                                       'javax.faces.ViewState': 'j_id1'},
+                                 cookies=response1.cookies)
+
+    return BeautifulSoup(response2.content, 'html.parser')
 
 
 def load_disciplines() -> list[Discipline]:

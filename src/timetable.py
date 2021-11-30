@@ -27,6 +27,8 @@ def save_to_file(file_name: str, disciplines: list[Discipline], timetables: list
             file.writelines(('|' + '|'.join(row) + '|\n' for row in table))
             file.write(generate_legend(disciplines, timetable))
 
+    print(f'\nFile generated, checkout {file_name}')
+
 
 def generate_legend(disciplines: list[Discipline], timetable: list[Offer]) -> str:
     legend = '\n<details>\n<summary>Legenda das ofertas</summary>\n\n'
@@ -38,7 +40,7 @@ def generate_legend(disciplines: list[Discipline], timetable: list[Offer]) -> st
         legend += f'  - Vagas restantes: {offer.vacancies_offered - offer.vacancies_occuped}\n'
 
     return ''.join(char for char in unicodedata.normalize('NFD', legend)
-                   if unicodedata.category(char) != 'Mn') + '</details>'
+                   if unicodedata.category(char) != 'Mn') + '</details>\n'
 
 
 def create_table(disciplines: list[Discipline], timetable: list[Offer]) -> list[list[str]]:
