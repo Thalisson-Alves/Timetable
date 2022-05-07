@@ -4,10 +4,13 @@ import unicodedata
 
 from utils.entities.discipline import Discipline
 from utils.entities.offer import Offer
-from utils.repositories.discipline_repository import DisciplineRepository
+from utils.repositories.scrapper_discipline_repository import ScrapperDisciplineRepository
+from utils.scrappers.sigaa_scrapper import SIGAAScrapper
 
 
 def main(args: argparse.Namespace):
+    ScrapperDisciplineRepository.init(SIGAAScrapper())
+
     if args.list:
         display_disciplines()
 
@@ -24,7 +27,7 @@ def main(args: argparse.Namespace):
 def display_disciplines():
     print('All available disciplines:\n')
     print('-' * 30)
-    for discipline in DisciplineRepository.get_all():
+    for discipline in ScrapperDisciplineRepository.get_all():
         print(f'Code: {discipline.id_} \t Name: {discipline.name}')
     print('-' * 30)
 
@@ -48,7 +51,7 @@ def generate_legend(disciplines: list[Discipline], timetable: list[Offer]) -> st
         legend += f'  - Turma: {offer.code}\n'
         legend += f'  - Professor(a): {offer.teacher}\n'
         legend += f'  - Local: {offer.place}\n'
-        legend += f'  - Vagas restantes: {offer.vacancies_offered - offer.vacancies_occuped}\n'
+        legend += f'  - Vagas restantes: {offer.vacancies_offered - offer.vacancies_occupied}\n'
 
     return ''.join(char for char in unicodedata.normalize('NFD', legend)
                    if unicodedata.category(char) != 'Mn') + '</details>\n\n'
@@ -96,7 +99,7 @@ def is_valid_timetable(timetable: list[Offer]) -> bool:
     for offers in offers_on_day:
         for offer_a in offers:
             for offer_b in offers:
-                # Don't compare the same offer with it self
+                # Don't compare the same offer with itself
                 if offer_a == offer_b:
                     continue
 
@@ -127,7 +130,7 @@ def read_disciplines() -> list[Discipline]:
 
 
 def discipline_for_name(discipline_name: str) -> Discipline | None:
-    disciplines = DisciplineRepository.get_by_name(discipline_name)
+    disciplines = ScrapperDisciplineRepository.get_by_name(discipline_name)
     if len(disciplines) == 1:
         return disciplines[0]
     elif len(disciplines) > 1:
@@ -149,7 +152,8 @@ def parsed_args() -> argparse.Namespace:
     parser.add_argument('-d', '--disciplines', type=str, nargs='+',
                         default=[], required=False,
                         help='Discipline names or codes')
-    parser.add_argument('-o', '--output-file', type=str, default='timetables.md',
+    parser.add_argument('-o', '--output-file', type=str,
+                        default='timetables.md',
                         help='Output MarkDown file path')
     parser.add_argument('-l', '--list', action='store_true',
                         help='Display all disciplines')

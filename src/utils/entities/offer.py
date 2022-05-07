@@ -10,4 +10,4 @@ class Offer:
     schedule: Schedule
     place: str
     vacancies_offered: int
-    vacancies_occuped: int
+    vacancies_occupied: int

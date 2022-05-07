@@ -1,6 +1,6 @@
 from pytest import fixture
 
-import timetable
+import main
 from utils.entities.discipline import Discipline
 from utils.entities.offer import Offer
 from utils.entities.schedule import Schedule, Time
@@ -9,7 +9,7 @@ from utils.entities.schedule import Schedule, Time
 class TestTimetable:
     @staticmethod
     def test_create_table_with_no_disciplines():
-        table = timetable.create_table([], [])
+        table = main.create_table([], [])
 
         assert table == [
             ['   ', 'Segunda', 'Terca', 'Quarta',
@@ -23,7 +23,7 @@ class TestTimetable:
         offers = [discipline.offers[0]
                   for discipline in disciplines_no_collision]
 
-        table = timetable.create_table(disciplines_no_collision, offers)
+        table = main.create_table(disciplines_no_collision, offers)
 
         assert table == [
             ['   ', 'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado', 'Domingo'],
@@ -38,7 +38,7 @@ class TestTimetable:
         offers = [discipline.offers[0]
                   for discipline in disciplines_with_collision]
 
-        table = timetable.create_table(disciplines_with_collision, offers)
+        table = main.create_table(disciplines_with_collision, offers)
 
         assert table == [
             ['   ', 'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado', 'Domingo'],
@@ -58,7 +58,7 @@ def disciplines_no_collision() -> list[Discipline]:
                     code='A',
                     teacher='Teacher 1',
                     place='REMOTO',
-                    vacancies_occuped=0,
+                    vacancies_occupied=0,
                     vacancies_offered=10,
                     schedule=Schedule(days=[1, 3, 5],
                                       arrival=Time(10, 0),
@@ -74,7 +74,7 @@ def disciplines_no_collision() -> list[Discipline]:
                     code='B',
                     teacher='Teacher 2',
                     place='REMOTO',
-                    vacancies_occuped=0,
+                    vacancies_occupied=0,
                     vacancies_offered=10,
                     schedule=Schedule(days=[1, 2, 3],
                                       arrival=Time(8, 0),
@@ -90,7 +90,7 @@ def disciplines_no_collision() -> list[Discipline]:
                     code='A',
                     teacher='Teacher 1',
                     place='REMOTO',
-                    vacancies_occuped=0,
+                    vacancies_occupied=0,
                     vacancies_offered=10,
                     schedule=Schedule(days=[2, 4, 5],
                                       arrival=Time(14, 0),
@@ -112,7 +112,7 @@ def disciplines_with_collision() -> list[Discipline]:
                     code='A',
                     teacher='Teacher 1',
                     place='REMOTO',
-                    vacancies_occuped=0,
+                    vacancies_occupied=0,
                     vacancies_offered=10,
                     schedule=Schedule(days=[1, 3, 5],
                                       arrival=Time(10, 0),
@@ -128,7 +128,7 @@ def disciplines_with_collision() -> list[Discipline]:
                     code='A',
                     teacher='Teacher 1',
                     place='REMOTO',
-                    vacancies_occuped=0,
+                    vacancies_occupied=0,
                     vacancies_offered=10,
                     schedule=Schedule(days=[2, 4, 5],
                                       arrival=Time(10, 0),
