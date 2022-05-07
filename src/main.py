@@ -9,6 +9,8 @@ from utils.scrappers.sigaa_scrapper import SIGAAScrapper
 
 
 def main(args: argparse.Namespace):
+    # TODO - Save all disciplines on a database,
+    #  so we don't need to WebScrap everything again
     ScrapperDisciplineRepository.init(SIGAAScrapper())
 
     if args.list:
@@ -44,6 +46,7 @@ def save_to_file(file_name: str, disciplines: list[Discipline], timetables: list
     print(f'\nSaved result on file: {file_name}')
 
 
+# TODO - This should be in some sort of MarkDownView class
 def generate_legend(disciplines: list[Discipline], timetable: list[Offer]) -> str:
     legend = '\n<details>\n<summary>Legenda das ofertas</summary>\n\n'
     for discipline, offer in zip(disciplines, timetable):
