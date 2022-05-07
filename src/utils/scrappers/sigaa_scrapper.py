@@ -1,3 +1,4 @@
+import os
 import re
 
 import requests
@@ -8,32 +9,36 @@ from utils.entities.discipline import Discipline
 from utils.entities.offer import Offer
 from utils.entities.schedule import Schedule, Time
 
+CURRENT_YEAR = os.getenv('CURRENT_YEAR', 2022)
+CURRENT_PERIOD = os.getenv('CURRENT_PERIOD', 1)
+
 
 class SIGAAScrapper:
     _url = 'https://sig.unb.br/sigaa/public/turmas/listar.jsf'
     _cookies: RequestsCookieJar = None
 
     @classmethod
-    def list_all_disciplines(cls, **list_disciplines_kwargs):
+    def list_all_disciplines(cls):
         return [discipline for unity in cls.list_unities() for discipline in
-                cls.list_disciplines(unity, **list_disciplines_kwargs)]
+                cls.list_disciplines(unity)]
 
     @classmethod
-    def list_disciplines(cls, unity: int, year: int = 2022, period: int = 1):
-        soup = cls.__create_soup_for(unity, year, period)
+    def list_disciplines(cls, unity: int):
+        print(f'Getting disciplines from unity: {unity}')
+        soup = cls.__create_soup_for(unity, CURRENT_YEAR, CURRENT_PERIOD)
         return cls.__list_disciplines_by_soup(soup)
 
     @classmethod
-    def __create_soup_for(cls, unity: int, year: int,
-                          period: int, level: str = 'G') -> BeautifulSoup:
+    def __create_soup_for(cls, unity: int, year: str,
+                          period: str, level: str = 'G') -> BeautifulSoup:
         if not cls._cookies:
             cls._cookies = requests.get(cls._url).cookies
 
         request_data = {'formTurma': 'formTurma',
                         'formTurma:inputNivel': level,
-                        'formTurma:inputDepto': str(unity),
-                        'formTurma:inputAno': str(year),
-                        'formTurma:inputPeriodo': str(period),
+                        'formTurma:inputDepto': unity,
+                        'formTurma:inputAno': year,
+                        'formTurma:inputPeriodo': period,
                         'formTurma:j_id_jsp_1370969402_11': 'Buscar',
                         'javax.faces.ViewState': 'j_id1'}
 
@@ -51,7 +56,7 @@ class SIGAAScrapper:
                                                         'linhaPar']}):
             # Discipline data
             if table_row['class'] == ['agrupador']:
-                code, name = table_row.find('span').text.split(' - ')
+                code, name = table_row.find('span').text.split('-', maxsplit=1)
                 disciplines.append(Discipline(id_=string_cleanup(code),
                                               name=string_cleanup(name)))
 
@@ -81,7 +86,21 @@ class SIGAAScrapper:
 
     @classmethod
     def list_unities(cls) -> list[int]:
-        return [673]
+        response = requests.get(cls._url)
+        if not cls._cookies:
+            cls._cookies = response.cookies
+
+        soup = BeautifulSoup(response.content, 'html.parser')
+        return cls.__list_unities_by_soup(soup)
+
+    @classmethod
+    def __list_unities_by_soup(cls, soup: BeautifulSoup) -> list[int]:
+        unities: list[int] = []
+        select = soup.find('select', {'id': 'formTurma:inputDepto'})
+        # Skipping the first one, because it's just a placeholder
+        for option in select.find_all('option')[1:]:
+            unities.append(int(option['value']))
+        return unities
 
     @staticmethod
     def __parse_schedule(schedule: str) -> Schedule:
