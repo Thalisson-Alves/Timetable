@@ -2,16 +2,19 @@ import argparse
 from itertools import product
 import unicodedata
 
-from utils.entities.discipline import Discipline
-from utils.entities.offer import Offer
-from utils.repositories.scrapper_discipline_repository import ScrapperDisciplineRepository
-from utils.scrappers.sigaa_scrapper import SIGAAScrapper
+from models.discipline import Discipline
+from models.offer import Offer
+from repositories.discipline_repository import QueryDisciplineRepository, \
+    PersistentDisciplineRepository
+from repositories.mongo_discipline_repository import MongoDisciplineRepository
+from repositories.scrapper_discipline_repository import ScrapperDisciplineRepository
+from utils.scrappers.discipline_scrapper import DisciplineScrapper
+from utils.scrappers.sigaa_discipline_scrapper import SIGAADisciplineScrapper
 
 
 def main(args: argparse.Namespace):
-    # TODO - Save all disciplines on a database,
-    #  so we don't need to WebScrap everything again
-    ScrapperDisciplineRepository.init(SIGAAScrapper())
+    # TODO - Stop using the ScrapperDisciplineRepository
+    ScrapperDisciplineRepository.init(SIGAADisciplineScrapper())
 
     if args.list:
         display_disciplines()
@@ -24,6 +27,12 @@ def main(args: argparse.Namespace):
 
     valid_timetables = generate_valid_timetables(disciplines)
     save_to_file(args.output_file, disciplines, valid_timetables)
+
+
+def update_database(scrapper: DisciplineScrapper,
+                    discipline_repository: PersistentDisciplineRepository):
+    disciplines = scrapper.list_all_disciplines()
+    discipline_repository.create(disciplines)
 
 
 def display_disciplines():
@@ -78,7 +87,7 @@ def create_table(disciplines: list[Discipline], timetable: list[Offer]) -> list[
                     body[i][(day - 1) % len(header)] = cell_name
 
     for i, (arrival, departure) in enumerate(first_column[1:], 1):
-        first_column[i] = (max(arrival, first_column[i-1][1].rounded()),
+        first_column[i] = (max(arrival, first_column[i-1][1].rounded_up()),
                            departure)
 
     first_column[:] = [f'**{arrival} as {departure}**'
@@ -133,7 +142,7 @@ def read_disciplines() -> list[Discipline]:
 
 
 def discipline_for_name(discipline_name: str) -> Discipline | None:
-    disciplines = ScrapperDisciplineRepository.get_by_name(discipline_name)
+    disciplines = ScrapperDisciplineRepository.get_all({'name': discipline_name})
     if len(disciplines) == 1:
         return disciplines[0]
     elif len(disciplines) > 1:

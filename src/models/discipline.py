@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from utils.entities.offer import Offer
+from models.offer import Offer
 
 
 @dataclass

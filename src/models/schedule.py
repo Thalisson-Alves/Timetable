@@ -3,6 +3,8 @@ from dataclasses import dataclass
 
 @dataclass
 class Time:
+    # TODO - maybe refactor that to store only the minutes
+    #  and create a prop to the hour
     hour: int
     minutes: int
 
@@ -11,20 +13,24 @@ class Time:
         hour, minutes = map(int, content.split(':'))
         return cls(hour, minutes)
 
-    def rounded(self) -> 'Time':
+    @property
+    def in_minutes(self) -> int:
+        return self.hour * 60 + self.minutes
+
+    def rounded_up(self) -> 'Time':
         return Time(self.hour + (self.minutes > 0), 0)
 
     def __lt__(self, other: 'Time') -> bool:
-        return float(f'{self.hour}.{self.minutes}') < float(f'{other.hour}.{other.minutes}')
+        return self.in_minutes < other.in_minutes
 
     def __le__(self, other: 'Time') -> bool:
-        return float(f'{self.hour}.{self.minutes}') <= float(f'{other.hour}.{other.minutes}')
+        return self.in_minutes <= other.in_minutes
 
     def __gt__(self, other: 'Time') -> bool:
-        return float(f'{self.hour}.{self.minutes}') > float(f'{other.hour}.{other.minutes}')
+        return self.in_minutes > other.in_minutes
 
     def __ge__(self, other: 'Time') -> bool:
-        return float(f'{self.hour}.{self.minutes}') >= float(f'{other.hour}.{other.minutes}')
+        return self.in_minutes >= other.in_minutes
 
     def __str__(self) -> str:
         return f'{self.hour:02}:{self.minutes:02}'

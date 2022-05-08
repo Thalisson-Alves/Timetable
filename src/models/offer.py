@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from utils.entities.schedule import Schedule
+from models.schedule import Schedule
 
 
 @dataclass

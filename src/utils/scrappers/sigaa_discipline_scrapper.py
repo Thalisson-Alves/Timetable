@@ -1,21 +1,17 @@
-import os
 import re
 
 import requests
 from bs4 import BeautifulSoup
 from requests.cookies import RequestsCookieJar
 
-from utils.entities.discipline import Discipline
-from utils.entities.offer import Offer
-from utils.entities.schedule import Schedule, Time
-
-CURRENT_YEAR = os.getenv('CURRENT_YEAR', 2022)
-CURRENT_PERIOD = os.getenv('CURRENT_PERIOD', 1)
+from models import Discipline, Offer, Schedule, Time
+from utils.settings import CURRENT_YEAR, CURRENT_PERIOD
 
 
-class SIGAAScrapper:
+class SIGAADisciplineScrapper:
     _url = 'https://sig.unb.br/sigaa/public/turmas/listar.jsf'
     _cookies: RequestsCookieJar = None
+    _unities: dict[int, str] = {}
 
     @classmethod
     def list_all_disciplines(cls):
@@ -24,9 +20,13 @@ class SIGAAScrapper:
 
     @classmethod
     def list_disciplines(cls, unity: int):
-        print(f'Getting disciplines from unity: {unity}')
+        print(f'Scrapping unity: {unity} ...')
         soup = cls.__create_soup_for(unity, CURRENT_YEAR, CURRENT_PERIOD)
-        return cls.__list_disciplines_by_soup(soup)
+        disciplines = cls.__list_disciplines_by_soup(soup)
+        for discipline in disciplines:
+            discipline.unity = cls._unities[unity]
+
+        return disciplines
 
     @classmethod
     def __create_soup_for(cls, unity: int, year: str,
@@ -70,37 +70,44 @@ class SIGAAScrapper:
                 vacancies_occupied = table_datas[6].text
                 place = table_datas[7].text
 
-                disciplines[-1].offers.append(
-                    Offer(code=string_cleanup(code),
-                          teacher=string_cleanup(teacher),
-                          schedule=cls.__parse_schedule(
-                              string_cleanup(schedule)),
-                          vacancies_occupied=int(
-                              string_cleanup(vacancies_occupied)),
-                          vacancies_offered=int(
-                              string_cleanup(vacancies_offered)),
-                          place=string_cleanup(place))
-                )
+                try:
+                    disciplines[-1].offers.append(
+                        Offer(code=string_cleanup(code),
+                              teacher=string_cleanup(teacher),
+                              schedule=cls.__parse_schedule(
+                                  string_cleanup(schedule)),
+                              vacancies_occupied=int(
+                                  string_cleanup(vacancies_occupied)),
+                              vacancies_offered=int(
+                                  string_cleanup(vacancies_offered)),
+                              place=string_cleanup(place))
+                    )
+                except ValueError as e:
+                    # Some Offers don't have a Schedule,
+                    # so we don't add this offer
+                    print(e)
 
         return disciplines
 
     @classmethod
     def list_unities(cls) -> list[int]:
+        if cls._unities:
+            return [*cls._unities.keys()]
+
         response = requests.get(cls._url)
         if not cls._cookies:
             cls._cookies = response.cookies
 
         soup = BeautifulSoup(response.content, 'html.parser')
-        return cls.__list_unities_by_soup(soup)
+        cls.__load_unities_by_soup(soup)
+        return [*cls._unities.keys()]
 
     @classmethod
-    def __list_unities_by_soup(cls, soup: BeautifulSoup) -> list[int]:
-        unities: list[int] = []
+    def __load_unities_by_soup(cls, soup: BeautifulSoup) -> None:
         select = soup.find('select', {'id': 'formTurma:inputDepto'})
         # Skipping the first one, because it's just a placeholder
         for option in select.find_all('option')[1:]:
-            unities.append(int(option['value']))
-        return unities
+            cls._unities[int(option['value'])] = string_cleanup(option.text)
 
     @staticmethod
     def __parse_schedule(schedule: str) -> Schedule:
