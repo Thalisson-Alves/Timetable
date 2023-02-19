@@ -1,5 +1,4 @@
 from utils.entities.discipline import Discipline
-from utils.entities.offer import Offer
 from utils.scrappers.scrapper import Scrapper
 
 

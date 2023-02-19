@@ -1,7 +1,6 @@
 from typing import Protocol
 
 from utils.entities.discipline import Discipline
-from utils.entities.offer import Offer
 
 
 class DisciplineRepository(Protocol):
