@@ -17,13 +17,8 @@ class ScrapperDisciplineRepository:
                 return discipline
 
     @classmethod
-    def get_all(cls, length: int = None, offset: int = None) -> list[Discipline]:
+    def get_all(cls, length: int | None = None, offset: int | None = None) -> list[Discipline]:
         return cls._disciplines[offset:length]
-
-    @classmethod
-    def get_by_offer(cls, offer: Offer) -> list[Discipline]:
-        return [discipline for discipline in cls._disciplines
-                if offer in discipline]
 
     @classmethod
     def get_by_names(cls, names: list[str]) -> list[Discipline]:
