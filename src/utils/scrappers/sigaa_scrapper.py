@@ -123,12 +123,10 @@ class SIGAAScrapper:
 
     @classmethod
     def __list_unities_by_soup(cls, soup: BeautifulSoup) -> list[int]:
-        unities: list[int] = []
         select = soup.find('select', {'id': 'formTurma:inputDepto'})
-        # Skipping the first one, because it's just a placeholder
-        for option in select.find_all('option')[1:]:
-            unities.append(int(option['value']))
-        return unities
+        return [int(option['value'])
+                # Skipping the first one, because it's just a placeholder
+                for option in select.find_all('option')[1:]]
 
     @staticmethod
     def __parse_schedule(schedule: str) -> Schedule:
