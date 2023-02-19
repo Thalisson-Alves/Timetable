@@ -1,15 +1,16 @@
 from pytest import fixture
 
-import main
 from utils.entities.discipline import Discipline
 from utils.entities.offer import Offer
 from utils.entities.schedule import Schedule, Time
-
+from utils.entities.timetable import Timetable
+from utils.views import markdown_view
+from utils.timetable import generate_all_timetables
 
 class TestTimetable:
     @staticmethod
     def test_create_table_with_no_disciplines():
-        table = main.create_table([], [])
+        table = markdown_view.create_table(Timetable([], []))
 
         assert table == [
             ['   ', 'Segunda', 'Terca', 'Quarta',
@@ -20,10 +21,8 @@ class TestTimetable:
 
     @staticmethod
     def test_create_table_with_multiple_disciplines(disciplines_no_collision: list[Discipline]):
-        offers = [discipline.offers[0]
-                  for discipline in disciplines_no_collision]
-
-        table = main.create_table(disciplines_no_collision, offers)
+        timetables, _ = generate_all_timetables(disciplines_no_collision)
+        table = markdown_view.create_table(timetables[0])
 
         assert table == [
             ['   ', 'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado', 'Domingo'],
@@ -35,15 +34,13 @@ class TestTimetable:
 
     @staticmethod
     def test_create_table_with_collision(disciplines_with_collision: list[Discipline]):
-        offers = [discipline.offers[0]
-                  for discipline in disciplines_with_collision]
-
-        table = main.create_table(disciplines_with_collision, offers)
+        _, timetables = generate_all_timetables(disciplines_with_collision)
+        table = markdown_view.create_table(timetables[0])
 
         assert table == [
             ['   ', 'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado', 'Domingo'],
             [':---', ':---:', ':---:', ':---:', ':---:', ':---:', ':---:', ':---:'],
-            ['**10:00 as 11:50**', 'D1', 'D3', 'D1', 'D3', 'D1|D3', '   ', '   '],
+            ['**10:00 as 11:50**', 'D1', 'D3', 'D1', 'D3', 'D1~D3', '   ', '   '],
         ]
 
 
@@ -61,8 +58,8 @@ def disciplines_no_collision() -> list[Discipline]:
                     vacancies_occupied=0,
                     vacancies_offered=10,
                     schedule=Schedule(days=[1, 3, 5],
-                                      arrival=Time(10, 0),
-                                      departure=Time(11, 50)),
+                                      arrival=Time.from_string('10:00'),
+                                      departure=Time.from_string('11:50')),
                 )
             ]
         ),
@@ -77,8 +74,8 @@ def disciplines_no_collision() -> list[Discipline]:
                     vacancies_occupied=0,
                     vacancies_offered=10,
                     schedule=Schedule(days=[1, 2, 3],
-                                      arrival=Time(8, 0),
-                                      departure=Time(9, 50)),
+                                      arrival=Time.from_string('08:00'),
+                                      departure=Time.from_string('09:50')),
                 ),
             ]
         ),
@@ -93,8 +90,8 @@ def disciplines_no_collision() -> list[Discipline]:
                     vacancies_occupied=0,
                     vacancies_offered=10,
                     schedule=Schedule(days=[2, 4, 5],
-                                      arrival=Time(14, 0),
-                                      departure=Time(15, 50)),
+                                      arrival=Time.from_string('14:00'),
+                                      departure=Time.from_string('15:50')),
                 )
             ]
         ),
@@ -115,8 +112,8 @@ def disciplines_with_collision() -> list[Discipline]:
                     vacancies_occupied=0,
                     vacancies_offered=10,
                     schedule=Schedule(days=[1, 3, 5],
-                                      arrival=Time(10, 0),
-                                      departure=Time(11, 50)),
+                                      arrival=Time.from_string('10:00'),
+                                      departure=Time.from_string('11:50')),
                 )
             ]
         ),
@@ -131,8 +128,8 @@ def disciplines_with_collision() -> list[Discipline]:
                     vacancies_occupied=0,
                     vacancies_offered=10,
                     schedule=Schedule(days=[2, 4, 5],
-                                      arrival=Time(10, 0),
-                                      departure=Time(11, 50)),
+                                      arrival=Time.from_string('10:00'),
+                                      departure=Time.from_string('11:50')),
                 )
             ]
         ),
