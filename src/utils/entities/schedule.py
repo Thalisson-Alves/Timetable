@@ -1,36 +1,29 @@
 from dataclasses import dataclass
 
 
-@dataclass
+@dataclass(order=True, unsafe_hash=True)
 class Time:
-    hour: int
-    minutes: int
+    total_minutes: int
+
+    @property
+    def hours(self) -> int:
+        return self.total_minutes // 60
+
+    @property
+    def minutes(self) -> int:
+        return self.total_minutes % 60
 
     @classmethod
     def from_string(cls, content: str):
-        hour, minutes = map(int, content.split(':'))
-        return cls(hour, minutes)
+        hours, minutes = map(int, content.split(':'))
+        return cls(hours * 60 + minutes)
 
-    def rounded(self) -> 'Time':
-        return Time(self.hour + (self.minutes > 0), 0)
-
-    def __lt__(self, other: 'Time') -> bool:
-        return float(f'{self.hour}.{self.minutes}') < float(f'{other.hour}.{other.minutes}')
-
-    def __le__(self, other: 'Time') -> bool:
-        return float(f'{self.hour}.{self.minutes}') <= float(f'{other.hour}.{other.minutes}')
-
-    def __gt__(self, other: 'Time') -> bool:
-        return float(f'{self.hour}.{self.minutes}') > float(f'{other.hour}.{other.minutes}')
-
-    def __ge__(self, other: 'Time') -> bool:
-        return float(f'{self.hour}.{self.minutes}') >= float(f'{other.hour}.{other.minutes}')
+    def rounded_up(self) -> 'Time':
+        hours, minutes = divmod(self.total_minutes, 60)
+        return Time((hours + (minutes > 0)) * 60)
 
     def __str__(self) -> str:
-        return f'{self.hour:02}:{self.minutes:02}'
-
-    def __hash__(self) -> int:
-        return hash((self.hour, self.minutes))
+        return f'{self.hours:02}:{self.minutes:02}'
 
 
 @dataclass
@@ -38,3 +31,4 @@ class Schedule:
     days: list[int]
     arrival: Time
     departure: Time
+
