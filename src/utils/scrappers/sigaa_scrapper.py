@@ -95,14 +95,14 @@ class SIGAAScrapper:
                 vacancies_occupied = table_datas[6].text
                 place = table_datas[7].text
 
-                disciplines[-1].offers.append(
+                disciplines[-1].add_offer(
                     Offer(code=string_cleanup(code),
                           teacher=string_cleanup(teacher),
                           schedule=cls.__parse_schedule(
                               string_cleanup(schedule)),
-                          vacancies_occupied=int(
+                          vacancy_filled=int(
                               string_cleanup(vacancies_occupied)),
-                          vacancies_offered=int(
+                          vacancy_offered=int(
                               string_cleanup(vacancies_offered)),
                           place=string_cleanup(place))
                 )
