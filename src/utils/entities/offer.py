@@ -9,9 +9,9 @@ class Offer:
     teacher: str
     schedule: Schedule
     place: str
-    vacancies_offered: int
-    vacancies_occupied: int
+    vacancy_offered: int
+    vacancy_filled: int
 
-    def collide(self, other: 'Offer') -> bool:
-        return self.schedule.departure > other.schedule.arrival and other.schedule.departure > self.schedule.arrival
+    def vacancy_remaining(self) -> int:
+        return self.vacancy_offered - self.vacancy_filled
 
