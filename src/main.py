@@ -19,7 +19,7 @@ def main(args: argparse.Namespace):
     else:
         disciplines = read_disciplines()
 
-    markdown_view.save_to_file(args.output_file, *generate_all_timetables(disciplines))
+    markdown_view.save_to_file(args.output_file, disciplines)
 
 
 def display_disciplines():
