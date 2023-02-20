@@ -1,15 +1,18 @@
-import unicodedata
 import io
+import unicodedata
 
+from utils.entities.discipline import Discipline
 from utils.entities.timetable import Timetable
+from utils.timetable import generate_all_timetables, remove_duplicates_sorted_seq
 
 
-def save_to_file(file_name: str, valid: list[Timetable], invalid: list[Timetable]):
+def save_to_file(file_name: str, disciplines: list[Discipline]) -> None:
+    valid, invalid = generate_all_timetables(disciplines)
     with open(file_name, 'w') as file:
         file.write('# Timetables\n\n## Valid\n\n')
         save_timetables(file, valid)
         file.write('## Invalid\n\n')
-        save_timetables(file, invalid)
+        save_timetables(file, sorted(invalid, key=lambda x: len(x.collisions)))
 
     print(f'\nSaved result on file: {file_name}')
 
@@ -25,12 +28,14 @@ def save_timetables(file: io.TextIOBase, timetables: list[Timetable]) -> None:
 
 def generate_legend(timetable: Timetable) -> str:
     legend = '\n<details>\n<summary>Legenda das ofertas</summary>\n\n'
-    for discipline, offer in timetable:
+    for discipline, schedule in timetable:
+        offers = discipline.offers[schedule]
+
         legend += f'- {discipline.short_name}: {discipline.name}\n'
-        legend += f'  - Turma: {offer.code}\n'
-        legend += f'  - Professor(a): {offer.teacher}\n'
-        legend += f'  - Local: {offer.place}\n'
-        legend += f'  - Vagas restantes: {offer.vacancies_offered - offer.vacancies_occupied}\n'
+        legend += f'  - Turma: {",".join(o.code for o in offers)}\n'
+        legend += f'  - Professor(a): {",".join(o.teacher for o in offers)}\n'
+        legend += f'  - Local: {",".join(o.place for o in offers)}\n'
+        legend += f'  - Vagas restantes: {",".join(str(o.vacancy_remaining()) for o in offers)}\n'
 
     return ''.join(char for char in unicodedata.normalize('NFD', legend)
                    if unicodedata.category(char) != 'Mn') + '</details>\n\n'
@@ -41,20 +46,26 @@ def create_table(timetable: Timetable) -> list[list[str]]:
               'Quinta', 'Sexta', 'Sabado', 'Domingo']
     separator = [':---:'] * len(header)
 
-    schedules = sorted({(offer.schedule.arrival, offer.schedule.departure)
-                           for offer in timetable.offers})
+    schedules = sorted((schedule.arrival, schedule.departure)
+                       for schedule in timetable.schedules)
+
+    for i, (arrival, departure) in enumerate(schedules):
+        start = arrival
+        end = departure
+        if i < len(schedules) - 1:
+            end = min(departure, schedules[i+1][schedules[i+1][0] == arrival].rounded_up().add_minutes(-10))
+        schedules[i] = (start, end)
+
+    schedules = remove_duplicates_sorted_seq(schedules)
 
     body = [['   '] * len(header) for _ in range(len(schedules))]
-    for discipline, offer in timetable:
-        for day in offer.schedule.days:
+    for discipline, schedule in timetable:
+        for day in schedule.days:
             for i, (start, end) in enumerate(schedules):
-                if offer.schedule.departure > start and end > offer.schedule.arrival:
+                if schedule.departure > start and end > schedule.arrival:
                     current_cell = body[i][(day - 1) % len(header)].strip()
                     cell_name = discipline.short_name if not current_cell else f'{current_cell}~{discipline.short_name}'
                     body[i][(day - 1) % len(header)] = cell_name
-
-    for i, (arrival, departure) in enumerate(schedules[1:], 1):
-        schedules[i] = (max(arrival, schedules[i-1][1].rounded_up()), departure)
 
     first_column = [f'**{arrival} as {departure}**'
                     for arrival, departure in schedules]
