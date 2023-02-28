@@ -19,15 +19,35 @@ class Timetable:
         self._update_collisions()
 
     def _update_collisions(self) -> None:
-        # TODO: Fix this collision check or remove completly
-        for i, s1 in enumerate(self.schedules):
-            for j, s2 in enumerate(self.schedules[i+1:]):
-                intersection = s1.intersection(s2)
+        schedules_per_day: list[list[tuple[Schedule, int]]] = [[] for _ in range(7)]
+        for i, schedule in enumerate(self.schedules):
+            for day in schedule.days:
+                one_day_schedule = Schedule(days=[day],
+                                            arrival=schedule.arrival,
+                                            departure=schedule.departure)
+                schedules_per_day[day].append((one_day_schedule, i))
+
+        for schedules in schedules_per_day:
+            if not schedules:
+                continue
+
+            schedules.sort()
+
+            current, ci = schedules[0]
+            for next, ni in schedules[1:]:
+                intersection = current.intersection(next)
                 if not intersection:
+                    current = next
                     continue
+
                 if intersection not in self.collisions:
-                    self.collisions[intersection] = []
-                self.collisions[intersection].append(self.disciplines[i])
+                    self.collisions[intersection] = [self.disciplines[ni], self.disciplines[ci]]
+                else:
+                    self.collisions[intersection].append(self.disciplines[ni])
+
+                current = current.surplus(next)
+                if not current:
+                    current = next
 
     def __iter__(self) -> Iterator[tuple[Discipline, Schedule]]:
         yield from ((d, s) for d, s in zip(self.disciplines, self.schedules))
