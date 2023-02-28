@@ -14,7 +14,6 @@ def generate_all_timetables(disciplines: list[Discipline]) -> tuple[list[Timetab
     return valid, invalid
 
 
-
 _T = TypeVar('_T')
 def remove_duplicates_sorted_seq(seq: Sequence[_T]) -> list[_T]:
     if not seq:

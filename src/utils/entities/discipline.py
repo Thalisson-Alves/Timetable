@@ -9,7 +9,6 @@ class Discipline:
     id_: str
     name: str
     offers: dict[Schedule, list[Offer]] = field(init=False, default_factory=dict)
-    unity: str = ''
 
     @classmethod
     def with_offers(cls, offers: list[Offer], **kwargs) -> 'Discipline':
