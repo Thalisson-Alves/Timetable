@@ -126,7 +126,7 @@ class SIGAAScrapper:
         select = soup.find('select', {'id': 'formTurma:inputDepto'})
         return [int(option['value'])
                 # Skipping the first one, because it's just a placeholder
-                for option in select.find_all('option')[1:]]
+                for option in select.find_all('option')[1:]]  # type: ignore
 
     @staticmethod
     def __parse_schedule(schedule: str) -> Schedule:
