@@ -1,8 +1,8 @@
 from pytest import fixture
 
-from utils.entities.discipline import Discipline
-from utils.entities.offer import Offer
-from utils.entities.schedule import Schedule, Time
+from models.discipline import Discipline
+from models.offer import Offer
+from models.schedule import Schedule, Time
 
 
 def create_discipline(id_: int, *schedules: Schedule):

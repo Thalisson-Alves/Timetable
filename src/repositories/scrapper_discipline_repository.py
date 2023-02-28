@@ -1,5 +1,5 @@
-from utils.entities.discipline import Discipline
-from utils.scrappers.scrapper import Scrapper
+from models.discipline import Discipline
+from scrappers.scrapper import Scrapper
 
 
 class ScrapperDisciplineRepository:

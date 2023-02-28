@@ -1,6 +1,6 @@
-from utils.entities.discipline import Discipline
-from utils.entities.timetable import Timetable
-from utils.views import markdown_view
+from models.discipline import Discipline
+from models.timetable import Timetable
+from views import markdown_view
 from utils.timetable import generate_all_timetables
 
 class TestMarkdownView:

@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from utils.entities.discipline import Discipline
+from models.discipline import Discipline
 
 
 class Scrapper(Protocol):

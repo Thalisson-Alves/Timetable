@@ -1,9 +1,10 @@
 import io
 import unicodedata
 
-from utils.entities.discipline import Discipline
-from utils.entities.timetable import Timetable
-from utils.timetable import generate_all_timetables, remove_duplicates_sorted_seq
+from models.discipline import Discipline
+from models.timetable import Timetable
+from utils.timetable import generate_all_timetables
+from utils.iterable import remove_duplicates_sorted_seq
 
 
 def save_to_file(file_name: str, disciplines: list[Discipline]) -> None:

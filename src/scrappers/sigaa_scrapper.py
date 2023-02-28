@@ -6,9 +6,9 @@ import requests
 from bs4 import BeautifulSoup
 from requests.cookies import RequestsCookieJar
 
-from utils.entities.discipline import Discipline
-from utils.entities.offer import Offer
-from utils.entities.schedule import Schedule, Time
+from models.discipline import Discipline
+from models.offer import Offer
+from models.schedule import Schedule, Time
 
 CURRENT_YEAR = int(os.getenv('CURRENT_YEAR', datetime.utcnow().year))
 CURRENT_PERIOD = int(os.getenv('CURRENT_PERIOD', (datetime.utcnow().month >= 6) + 1))

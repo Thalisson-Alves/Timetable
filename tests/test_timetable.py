@@ -1,6 +1,6 @@
-from utils.entities.discipline import Discipline
-from utils.entities.timetable import Timetable
-from utils.entities.schedule import Time, Schedule
+from models.discipline import Discipline
+from models.timetable import Timetable
+from models.schedule import Time, Schedule
 
 
 class TestTimetable:

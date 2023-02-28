@@ -1,10 +1,10 @@
 import argparse
 
-from utils.entities.discipline import Discipline
-from utils.repositories.scrapper_discipline_repository import ScrapperDisciplineRepository
-from utils.scrappers.sigaa_scrapper import SIGAAScrapper
+from models.discipline import Discipline
+from repositories.scrapper_discipline_repository import ScrapperDisciplineRepository
+from scrappers.sigaa_scrapper import SIGAAScrapper
 from utils.timetable import generate_all_timetables
-from utils.views import markdown_view
+from views import markdown_view
 
 
 def main(args: argparse.Namespace):

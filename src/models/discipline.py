@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
-from utils.entities.offer import Offer
-from utils.entities.schedule import Schedule
+from models.offer import Offer
+from models.schedule import Schedule
 
 
 @dataclass

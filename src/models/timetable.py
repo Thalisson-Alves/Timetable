@@ -1,8 +1,8 @@
 from typing import Sequence, Iterator
 from dataclasses import dataclass, field
 
-from utils.entities.discipline import Discipline
-from utils.entities.schedule import Schedule
+from models.discipline import Discipline
+from models.schedule import Schedule
 
 
 @dataclass(frozen=True)
