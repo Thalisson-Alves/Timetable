@@ -30,11 +30,22 @@ class Time:
         return f'{self.hours:02}:{self.minutes:02}'
 
 
-@dataclass
+@dataclass(order=True)
 class Schedule:
     days: list[int]
     arrival: Time
     departure: Time
+
+    def surplus(self, other: 'Schedule') -> Optional['Schedule']:
+        intersection = self.intersection(other)
+        if not intersection or self.departure >= other.departure:
+            return None
+
+        return Schedule(
+            days=intersection.days,
+            arrival=self.departure,
+            departure=other.departure,
+        )
 
     def intersection(self, other: 'Schedule') -> Optional['Schedule']:
         common_days = set(self.days) & set(other.days)
