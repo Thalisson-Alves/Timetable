@@ -1,14 +1,14 @@
 import io
 import unicodedata
+from typing import Iterable
 
-from models.discipline import Discipline
 from models.timetable import Timetable
-from utils.timetable import generate_all_timetables
 from utils.iterable import remove_duplicates_sorted_seq
 
 
-def save_to_file(file_name: str, disciplines: list[Discipline]) -> None:
-    valid, invalid = generate_all_timetables(disciplines)
+def save_to_file(file_name: str, timetables: list[Timetable]) -> None:
+    valid = filter(lambda x: x.is_valid, timetables)
+    invalid = filter(lambda x: not x.is_valid, timetables)
     with open(file_name, 'w') as file:
         file.write('# Timetables\n\n## Valid\n\n')
         save_timetables(file, valid)
@@ -18,7 +18,7 @@ def save_to_file(file_name: str, disciplines: list[Discipline]) -> None:
     print(f'\nSaved result on file: {file_name}')
 
 
-def save_timetables(file: io.TextIOBase, timetables: list[Timetable]) -> None:
+def save_timetables(file: io.TextIOBase, timetables: Iterable[Timetable]) -> None:
     for i, timetable in enumerate(timetables, 1):
         table = create_table(timetable)
 
