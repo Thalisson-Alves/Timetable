@@ -41,7 +41,7 @@ def read_disciplines() -> list[Discipline]:
         discipline = discipline_for_name(discipline_name)
         if discipline:
             disciplines.append(discipline)
-            print('Discipline added')
+            print(f'Discipline {discipline.name} added')
         else:
             print('Discipline not found. Try again')
         print()
