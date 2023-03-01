@@ -1,17 +1,25 @@
+import os
 import re
+from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup
 from requests.cookies import RequestsCookieJar
 
-from models import Discipline, Offer, Schedule, Time
-from utils.settings import CURRENT_YEAR, CURRENT_PERIOD
+from models.discipline import Discipline
+from models.offer import Offer
+from models.schedule import Schedule, Time
+
+CURRENT_YEAR = int(os.getenv('CURRENT_YEAR', datetime.utcnow().year))
+CURRENT_PERIOD = int(os.getenv('CURRENT_PERIOD', (datetime.utcnow().month >= 6) + 1))
+# By default Scrap only Faculdade do Gama (673)
+POSSIBLE_UNITIES = list(map(int, os.getenv('POSSIBLE_UNITIES', '673').split(',')))
+HTML_PATH = os.getenv('HTML_PATH', os.path.join(os.path.dirname(__file__), 'htmls'))
 
 
-class SIGAADisciplineScrapper:
-    _url = 'https://sig.unb.br/sigaa/public/turmas/listar.jsf'
-    _cookies: RequestsCookieJar = None
-    _unities: dict[int, str] = {}
+class SIGAAScrapper:
+    _url = 'https://sigaa.unb.br/sigaa/public/turmas/listar.jsf'
+    _cookies: RequestsCookieJar | None = None
 
     @classmethod
     def list_all_disciplines(cls):
@@ -20,17 +28,34 @@ class SIGAADisciplineScrapper:
 
     @classmethod
     def list_disciplines(cls, unity: int):
-        print(f'Scrapping unity: {unity} ...')
         soup = cls.__create_soup_for(unity, CURRENT_YEAR, CURRENT_PERIOD)
         disciplines = cls.__list_disciplines_by_soup(soup)
-        for discipline in disciplines:
-            discipline.unity = cls._unities[unity]
 
         return disciplines
 
     @classmethod
-    def __create_soup_for(cls, unity: int, year: str,
-                          period: str, level: str = 'G') -> BeautifulSoup:
+    def __create_soup_for(cls, unity: int, year: int,
+                          period: int, level: str = 'G') -> BeautifulSoup:
+        html = cls.__get_html_from_file(unity=unity, year=year, period=period, level=level)
+        if not html:
+            html = cls.__get_html_website(unity=unity, year=year, period=period, level=level)
+            with open(get_html_filename(unity=unity, year=year, period=period, level=level), 'w', encoding='utf-8') as f:
+                f.write(html)
+
+        return BeautifulSoup(html, 'html.parser')
+
+    @classmethod
+    def __get_html_from_file(cls, unity: int, year: int,
+                             period: int, level: str) -> str:
+        try:
+            with open(get_html_filename(unity=unity, year=year, period=period, level=level), 'r', encoding='utf-8') as f:
+                return f.read()
+        except FileNotFoundError:
+            return ''
+
+    @classmethod
+    def __get_html_website(cls, unity: int, year: int,
+                          period: int, level: str) -> str:
         if not cls._cookies:
             cls._cookies = requests.get(cls._url).cookies
 
@@ -44,7 +69,8 @@ class SIGAADisciplineScrapper:
 
         response = requests.post(cls._url, data=request_data,
                                  cookies=cls._cookies)
-        return BeautifulSoup(response.content, 'html.parser')
+
+        return response.text
 
     @classmethod
     def __list_disciplines_by_soup(cls,
@@ -70,44 +96,38 @@ class SIGAADisciplineScrapper:
                 vacancies_occupied = table_datas[6].text
                 place = table_datas[7].text
 
-                try:
-                    disciplines[-1].offers.append(
-                        Offer(code=string_cleanup(code),
-                              teacher=string_cleanup(teacher),
-                              schedule=cls.__parse_schedule(
-                                  string_cleanup(schedule)),
-                              vacancies_occupied=int(
-                                  string_cleanup(vacancies_occupied)),
-                              vacancies_offered=int(
-                                  string_cleanup(vacancies_offered)),
-                              place=string_cleanup(place))
-                    )
-                except ValueError as e:
-                    # Some Offers don't have a Schedule,
-                    # so we don't add this offer
-                    print(e)
+                disciplines[-1].add_offer(
+                    Offer(code=string_cleanup(code),
+                          teacher=string_cleanup(teacher),
+                          schedule=cls.__parse_schedule(
+                              string_cleanup(schedule)),
+                          vacancy_filled=int(
+                              string_cleanup(vacancies_occupied)),
+                          vacancy_offered=int(
+                              string_cleanup(vacancies_offered)),
+                          place=string_cleanup(place))
+                )
 
         return disciplines
 
     @classmethod
     def list_unities(cls) -> list[int]:
-        if cls._unities:
-            return [*cls._unities.keys()]
+        if POSSIBLE_UNITIES:
+            return POSSIBLE_UNITIES
 
         response = requests.get(cls._url)
         if not cls._cookies:
             cls._cookies = response.cookies
 
         soup = BeautifulSoup(response.content, 'html.parser')
-        cls.__load_unities_by_soup(soup)
-        return [*cls._unities.keys()]
+        return cls.__list_unities_by_soup(soup)
 
     @classmethod
-    def __load_unities_by_soup(cls, soup: BeautifulSoup) -> None:
+    def __list_unities_by_soup(cls, soup: BeautifulSoup) -> list[int]:
         select = soup.find('select', {'id': 'formTurma:inputDepto'})
-        # Skipping the first one, because it's just a placeholder
-        for option in select.find_all('option')[1:]:
-            cls._unities[int(option['value'])] = string_cleanup(option.text)
+        return [int(option['value'])
+                # Skipping the first one, because it's just a placeholder
+                for option in select.find_all('option')[1:]]  # type: ignore
 
     @staticmethod
     def __parse_schedule(schedule: str) -> Schedule:
@@ -129,3 +149,9 @@ class SIGAADisciplineScrapper:
 
 def string_cleanup(text: str) -> str:
     return re.sub(r'\s+', ' ', text).strip()
+
+
+def get_html_filename(**kwargs) -> str:
+    os.makedirs(HTML_PATH, exist_ok=True)
+    return os.path.join(HTML_PATH, '{level}-{unity}-{year}-{period}.html'.format(**kwargs))
+

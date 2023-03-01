@@ -1,46 +1,63 @@
 from dataclasses import dataclass
+from typing import Optional
 
 
-@dataclass
+@dataclass(order=True, unsafe_hash=True)
 class Time:
-    # TODO - maybe refactor that to store only the minutes
-    #  and create a prop to the hour
-    hour: int
-    minutes: int
+    total_minutes: int
+
+    @property
+    def hours(self) -> int:
+        return self.total_minutes // 60
+
+    @property
+    def minutes(self) -> int:
+        return self.total_minutes % 60
 
     @classmethod
     def from_string(cls, content: str):
-        hour, minutes = map(int, content.split(':'))
-        return cls(hour, minutes)
-
-    @property
-    def in_minutes(self) -> int:
-        return self.hour * 60 + self.minutes
+        hours, minutes = map(int, content.split(':'))
+        return cls(hours * 60 + minutes)
 
     def rounded_up(self) -> 'Time':
-        return Time(self.hour + (self.minutes > 0), 0)
+        hours, minutes = divmod(self.total_minutes, 60)
+        return Time((hours + (minutes > 0)) * 60)
 
-    def __lt__(self, other: 'Time') -> bool:
-        return self.in_minutes < other.in_minutes
-
-    def __le__(self, other: 'Time') -> bool:
-        return self.in_minutes <= other.in_minutes
-
-    def __gt__(self, other: 'Time') -> bool:
-        return self.in_minutes > other.in_minutes
-
-    def __ge__(self, other: 'Time') -> bool:
-        return self.in_minutes >= other.in_minutes
+    def add_minutes(self, minutes: int) -> 'Time':
+        return Time(self.total_minutes + minutes)
 
     def __str__(self) -> str:
-        return f'{self.hour:02}:{self.minutes:02}'
-
-    def __hash__(self) -> int:
-        return hash((self.hour, self.minutes))
+        return f'{self.hours:02}:{self.minutes:02}'
 
 
-@dataclass
+@dataclass(order=True)
 class Schedule:
     days: list[int]
     arrival: Time
     departure: Time
+
+    def surplus(self, other: 'Schedule') -> Optional['Schedule']:
+        intersection = self.intersection(other)
+        if not intersection or self.departure >= other.departure:
+            return None
+
+        return Schedule(
+            days=intersection.days,
+            arrival=self.departure,
+            departure=other.departure,
+        )
+
+    def intersection(self, other: 'Schedule') -> Optional['Schedule']:
+        common_days = set(self.days) & set(other.days)
+        if not common_days or self.departure <= other.arrival or other.departure <= self.arrival:
+            return None
+
+        return Schedule(
+            days=list(common_days),
+            arrival=Time(max(self.arrival.total_minutes, other.arrival.total_minutes)),
+            departure=Time(min(self.departure.total_minutes, other.departure.total_minutes))
+        )
+
+    def __hash__(self) -> int:
+        return hash((tuple(self.days), self.arrival, self.departure))
+

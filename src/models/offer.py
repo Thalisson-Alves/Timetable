@@ -9,5 +9,9 @@ class Offer:
     teacher: str
     schedule: Schedule
     place: str
-    vacancies_offered: int
-    vacancies_occupied: int
+    vacancy_offered: int
+    vacancy_filled: int
+
+    def vacancy_remaining(self) -> int:
+        return self.vacancy_offered - self.vacancy_filled
+

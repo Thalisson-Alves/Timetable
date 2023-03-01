@@ -3,14 +3,17 @@ from typing import Protocol
 from models.discipline import Discipline
 
 
-class QueryDisciplineRepository(Protocol):
-    def get_all(self, filters: dict = None) -> list[Discipline]:
+class DisciplineRepository(Protocol):
+    def get(self, discipline_id: str) -> Discipline | None:
         ...
 
-
-class PersistentDisciplineRepository(QueryDisciplineRepository):
-    def create(self, disciplines: list[Discipline]) -> None:
+    def get_all(self, length: int | None = None,
+                offset: int | None = None) -> list[Discipline]:
         ...
 
-    def has_any_entry(self) -> bool:
+    def get_by_names(self, names: list[str]) -> list[Discipline]:
         ...
+
+    def get_by_name(self, name: str) -> list[Discipline]:
+        ...
+

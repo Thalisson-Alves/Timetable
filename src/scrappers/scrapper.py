@@ -3,7 +3,7 @@ from typing import Protocol
 from models.discipline import Discipline
 
 
-class DisciplineScrapper(Protocol):
+class Scrapper(Protocol):
     def list_all_disciplines(self) -> list[Discipline]:
         ...
 
@@ -12,3 +12,4 @@ class DisciplineScrapper(Protocol):
 
     def list_unities(self) -> list[int]:
         ...
+
