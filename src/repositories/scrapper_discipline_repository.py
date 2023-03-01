@@ -29,3 +29,4 @@ class ScrapperDisciplineRepository:
     def get_by_name(cls, name: str) -> list[Discipline]:
         return [discipline for discipline in cls._disciplines
                 if name.lower() in discipline.name.lower()]
+

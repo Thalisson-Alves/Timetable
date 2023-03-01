@@ -29,7 +29,9 @@ class SIGAAScrapper:
     @classmethod
     def list_disciplines(cls, unity: int):
         soup = cls.__create_soup_for(unity, CURRENT_YEAR, CURRENT_PERIOD)
-        return cls.__list_disciplines_by_soup(soup)
+        disciplines = cls.__list_disciplines_by_soup(soup)
+
+        return disciplines
 
     @classmethod
     def __create_soup_for(cls, unity: int, year: int,
