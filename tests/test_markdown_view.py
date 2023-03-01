@@ -17,7 +17,7 @@ class TestMarkdownView:
 
     @staticmethod
     def test_create_table_with_multiple_disciplines(disciplines_no_collision: list[Discipline]):
-        timetables, _ = generate_all_timetables(disciplines_no_collision)
+        timetables = generate_all_timetables(disciplines_no_collision)
         table = markdown_view.create_table(timetables[0])
 
         assert table == [
@@ -30,7 +30,7 @@ class TestMarkdownView:
 
     @staticmethod
     def test_create_table_with_1_collision(disciplines_with_1_collision: list[Discipline]):
-        _, timetables = generate_all_timetables(disciplines_with_1_collision)
+        timetables = generate_all_timetables(disciplines_with_1_collision)
         table = markdown_view.create_table(timetables[0])
 
         assert table == [
@@ -41,7 +41,7 @@ class TestMarkdownView:
 
     @staticmethod
     def test_create_table_with_2_collisions(disciplines_with_2_collisions: list[Discipline]):
-        _, timetables = generate_all_timetables(disciplines_with_2_collisions)
+        timetables = generate_all_timetables(disciplines_with_2_collisions)
         table = markdown_view.create_table(timetables[0])
 
         assert table == [
@@ -53,7 +53,7 @@ class TestMarkdownView:
 
     @staticmethod
     def test_create_table_with_3_collisions(disciplines_with_3_collisions: list[Discipline]):
-        _, timetables = generate_all_timetables(disciplines_with_3_collisions)
+        timetables = generate_all_timetables(disciplines_with_3_collisions)
         table = markdown_view.create_table(timetables[0])
 
         assert table == [
