@@ -29,6 +29,7 @@ class ScrapperDisciplineRepository:
 
     @classmethod
     def get_by_name(cls, name: str) -> list[Discipline]:
+        # TODO - Normalize strings before comparing (removing accents and special characters)
         return [discipline for discipline in cls._disciplines
                 if name.lower() in discipline.name.lower()]
 
