@@ -14,7 +14,6 @@ CURRENT_YEAR = int(os.getenv('CURRENT_YEAR', datetime.utcnow().year))
 CURRENT_PERIOD = int(os.getenv('CURRENT_PERIOD', (datetime.utcnow().month >= 6) + 1))
 # By default Scrap only Faculdade do Gama (673)
 POSSIBLE_UNITIES = list(map(int, os.getenv('POSSIBLE_UNITIES', '673').split(',')))
-HTML_PATH = os.getenv('HTML_PATH', os.path.join(os.path.dirname(__file__), 'htmls'))
 
 
 class SIGAAScrapper:
@@ -36,22 +35,9 @@ class SIGAAScrapper:
     @classmethod
     def __create_soup_for(cls, unity: int, year: int,
                           period: int, level: str = 'G') -> BeautifulSoup:
-        html = cls.__get_html_from_file(unity=unity, year=year, period=period, level=level)
-        if not html:
-            html = cls.__get_html_website(unity=unity, year=year, period=period, level=level)
-            with open(get_html_filename(unity=unity, year=year, period=period, level=level), 'w', encoding='utf-8') as f:
-                f.write(html)
+        html = cls.__get_html_website(unity=unity, year=year, period=period, level=level)
 
         return BeautifulSoup(html, 'html.parser')
-
-    @classmethod
-    def __get_html_from_file(cls, unity: int, year: int,
-                             period: int, level: str) -> str:
-        try:
-            with open(get_html_filename(unity=unity, year=year, period=period, level=level), 'r', encoding='utf-8') as f:
-                return f.read()
-        except FileNotFoundError:
-            return ''
 
     @classmethod
     def __get_html_website(cls, unity: int, year: int,
@@ -149,9 +135,4 @@ class SIGAAScrapper:
 
 def string_cleanup(text: str) -> str:
     return re.sub(r'\s+', ' ', text).strip()
-
-
-def get_html_filename(**kwargs) -> str:
-    os.makedirs(HTML_PATH, exist_ok=True)
-    return os.path.join(HTML_PATH, '{level}-{unity}-{year}-{period}.html'.format(**kwargs))
 

@@ -2,6 +2,8 @@ from models.discipline import Discipline
 from scrappers.scrapper import Scrapper
 
 
+# TODO - Implement some sort of memoization, so we don't need to scrap every time
+#      - Like saving the content of interest in a file and add one option to load from there
 class ScrapperDisciplineRepository:
     _disciplines: list[Discipline]
 
