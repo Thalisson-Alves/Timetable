@@ -12,6 +12,7 @@ class Offer:
     vacancy_offered: int
     vacancy_filled: int
 
+    @property
     def vacancy_remaining(self) -> int:
         return self.vacancy_offered - self.vacancy_filled
 

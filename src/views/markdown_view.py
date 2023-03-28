@@ -36,7 +36,7 @@ def generate_legend(timetable: Timetable) -> str:
         legend += f'  - Turma: {",".join(o.code for o in offers)}\n'
         legend += f'  - Professor(a): {",".join(o.teacher for o in offers)}\n'
         legend += f'  - Local: {",".join(o.place for o in offers)}\n'
-        legend += f'  - Vagas restantes: {",".join(str(o.vacancy_remaining()) for o in offers)}\n'
+        legend += f'  - Vagas restantes: {",".join(str(o.vacancy_remaining) for o in offers)}\n'
 
     return ''.join(char for char in unicodedata.normalize('NFD', legend)
                    if unicodedata.category(char) != 'Mn') + '</details>\n\n'
